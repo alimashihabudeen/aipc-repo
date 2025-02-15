@@ -1,0 +1,68 @@
+- name: Install and configure Code-Server
+  hosts: code_servers
+  become: yes
+  tasks:
+    - name: Download Code-Server
+      get_url:
+        url: "https://github.com/coder/code-server/releases/download/v4.96.4/code-server-4.96.4-linux-amd64.tar.gz"
+        dest: "/tmp/code-server.tar.gz"
+
+    - name: Create installation directory
+      file:
+        path: "/usr/local/opt/code-server"
+        state: directory
+
+    - name: Extract Code-Server
+      ansible.builtin.unarchive:
+        src: "/tmp/code-server.tar.gz"
+        dest: "/usr/local/opt/code-server"
+        remote_src: yes
+
+    - name: Create symbolic links
+      file:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        state: link
+      loop:
+        - { src: "/usr/local/opt/code-server", dest: "/usr/lib/code-server" }
+        - { src: "/usr/local/opt/code-server/bin/code-server", dest: "/usr/bin/code-server" }
+
+    - name: Create directory for Code-Server
+      file:
+        path: "/var/lib/code-server"
+        state: directory
+
+    - name: Create systemd service file for Code-Server
+      template:
+        src: "code-server.service.j2"
+        dest: "/lib/systemd/system/code-server.service"
+
+    - name: Reload systemd and enable Code-Server service
+      systemd:
+        daemon_reload: yes
+        name: code-server
+        enabled: yes
+        state: started
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Configure Nginx for Code-Server
+      template:
+        src: "code-server.conf.j2"
+        dest: "/etc/nginx/sites-available/code-server.conf"
+
+    - name: Enable Nginx configuration
+      file:
+        src: "/etc/nginx/sites-available/code-server.conf"
+        dest: "/etc/nginx/sites-enabled/code-server.conf"
+        state: link
+
+    - name: Reload systemd and enable Nginx service
+      systemd:
+        daemon_reload: yes
+        name: code-server
+        enabled: yes
+        state: restarted

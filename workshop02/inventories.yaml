@@ -1,0 +1,11 @@
+all:
+  hosts:
+    code_server:  # Renamed from code_servers to avoid conflicts
+      ansible_host: 128.199.245.211  # Replace with your actual Droplet IP
+      ansible_user: root             # First login is usually 'root'
+      ansible_ssh_private_key_file: ~/.ssh/id_rsa  # Ensure this file exists
+  children:
+    code_servers:  # This is now only a group, not a host
+      hosts:
+        code_server
+
