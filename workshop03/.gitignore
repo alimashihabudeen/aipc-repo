@@ -1,0 +1,10 @@
+terraform.tfvars
+*.tfvars
+*.tfstate
+*.tfstate.backup
+.terraform/
+workshop01
+workshop01.pub
+nginx*
+*terraform.lock.hcl
+roo*
